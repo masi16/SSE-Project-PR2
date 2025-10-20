@@ -3,8 +3,8 @@
 import { Link, Outlet } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { Box, AppBar, Toolbar, Drawer, List, ListItemButton, ListItemIcon, ListItemText, Typography, Button } from '@mui/material';
-import HomeIcon from '@mui/icons-material/Home'; // Icono para el Dashboard
-import GavelIcon from '@mui/icons-material/Gavel'; // Icono para Expedientes
+import HomeIcon from '@mui/icons-material/Home'; 
+import GavelIcon from '@mui/icons-material/Gavel'; 
 
 const drawerWidth = 240;
 
