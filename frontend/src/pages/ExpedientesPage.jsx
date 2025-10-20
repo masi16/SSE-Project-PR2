@@ -1,5 +1,3 @@
-// Contenido para: frontend/src/pages/ExpedientesPage.jsx
-
 import ExpedienteList from '../components/ExpedienteList';
 import ExpedienteForm from '../components/ExpedienteForm';
 
