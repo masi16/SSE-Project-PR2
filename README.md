@@ -1,1 +1,5 @@
-prueba del inicio de sesion y pagina principal, en la carpeta api esta la base de datos falsa
+login and register test. the mock data is located in \frontend\src\api
+
+this is the first draft of the website design
+
+
