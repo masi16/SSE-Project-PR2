@@ -1,11 +1,9 @@
-// en frontend/src/pages/HomePage.jsx
-
 import { useState, useEffect } from 'react';
 import { Grid, Paper, Typography, Box, List, ListItem, ListItemText, CircularProgress } from '@mui/material';
-// 👇 PASO 1: CAMBIAMOS EL IMPORT. YA NO USAMOS AXIOS AQUÍ.
+
 import { getDashboardData } from '../api/mockApi';
 
-// ... (El componente StatCard sigue siendo el mismo)
+
 function StatCard({ title, value }) {
   return (
     <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', height: 140 }}>
@@ -28,7 +26,7 @@ function HomePage() {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        // 👇 PASO 2: LLAMAMOS A NUESTRA FUNCIÓN FALSA
+        
         const response = await getDashboardData();
 
         setSummary(response.summary);
@@ -42,9 +40,7 @@ function HomePage() {
     };
 
     fetchDashboardData();
-  }, []); // El array vacío asegura que se ejecute solo una vez
-
-  // El resto del componente (la parte visual) NO CAMBIA EN ABSOLUTO
+  }, []); 
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
