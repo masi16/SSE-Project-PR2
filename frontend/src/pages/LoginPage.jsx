@@ -1,4 +1,4 @@
-// Contenido COMPLETO Y CORRECTO para: frontend/src/pages/LoginPage.jsx
+
 
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
@@ -6,7 +6,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Box, Button, TextField, Typography, Container, Paper, Grid } from '@mui/material';
 
 function LoginPage() {
-  // 👇 1. El estado ahora se llama "dni"
+  
   const [dni, setDni] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -17,7 +17,7 @@ function LoginPage() {
     event.preventDefault();
     setError('');
     try {
-      // 👇 2. Pasamos "dni" a la función de login
+    
       await login(dni, password);
       navigate('/');
     } catch (err) {
@@ -34,13 +34,13 @@ function LoginPage() {
         </Typography>
         <Box component="form" onSubmit={handleLogin} sx={{ mt: 1 }}>
           
-          {/* 👇 3. ESTE ES EL CAMBIO MÁS IMPORTANTE PARA LA PARTE VISUAL 👇 */}
+          {}
           <TextField
             margin="normal"
             required
             fullWidth
             id="dni"
-            label="DNI" // <-- ¡AQUÍ ESTÁ LA CORRECCIÓN!
+            label="DNI" 
             name="dni"
             autoFocus
             value={dni}
