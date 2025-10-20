@@ -1,26 +1,40 @@
-// Contenido CORRECTO para: frontend/src/main.jsx
+// Contenido CORRECTO Y COMPLETO para: frontend/src/main.jsx
 
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
-import App from './App.jsx';
-import HomePage from './pages/HomePage.jsx';
-import ExpedientesPage from './pages/ExpedientesPage.jsx';
+// Imports de la lógica de autenticación
+import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
 
+// Imports de las páginas (cada una importada UNA SOLA VEZ)
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage'; 
+import HomePage from './pages/HomePage';
+import ExpedientesPage from './pages/ExpedientesPage';
+
+// Import de los estilos globales
 import './index.css';
 
+// Esta es la única parte que "ejecuta" la aplicación. Todo debe ir aquí dentro.
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    {/* 👇 Asegúrate de que <BrowserRouter> está aquí, envolviendo todo 👇 */}
     <BrowserRouter>
-      <Routes>
-        {/* App.jsx está DENTRO de BrowserRouter, por lo tanto sus Links funcionarán */}
-        <Route path="/" element={<App />}>
-          <Route index element={<HomePage />} />
-          <Route path="expedientes" element={<ExpedientesPage />} />
-        </Route>
-      </Routes>
+      <AuthProvider>
+        <Routes>
+          {/* Rutas públicas: cualquiera puede acceder a ellas */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+
+          {/* Rutas protegidas: solo usuarios logueados pueden acceder */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/expedientes" element={<ExpedientesPage />} />
+            {/* Aquí añadirías más rutas protegidas en el futuro */}
+          </Route>
+        </Routes>
+      </AuthProvider>
     </BrowserRouter>
   </React.StrictMode>
 );
