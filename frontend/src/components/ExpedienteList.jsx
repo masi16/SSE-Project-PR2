@@ -34,7 +34,7 @@ function ExpedienteList() {
     <div>
       <h1>Lista de Expedientes</h1>
       <ul>
-        {/* Hacemos un bucle sobre la lista de expedientes y los mostramos */}
+        {}
         {expedientes.map((exp) => (
           <li key={exp.id}>
             <strong>{exp.nro_expediente}</strong>: {exp.caratula}

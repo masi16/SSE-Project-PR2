@@ -13,9 +13,9 @@ function App() {
 
   return (
     <Box sx={{ display: 'flex' }}>
-      {/* ======================================================= */}
-      {/* BARRA SUPERIOR (HEADER) - Esto ya lo ves */}
-      {/* ======================================================= */}
+      {}
+      {}
+      {}
       <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
         <Toolbar sx={{ justifyContent: 'space-between' }}>
           <Typography variant="h6" noWrap component="div">
@@ -30,9 +30,9 @@ function App() {
         </Toolbar>
       </AppBar>
 
-      {/* ======================================================= */}
-      {/* BARRA LATERAL (SIDEBAR) - Esto es lo que falta */}
-      {/* ======================================================= */}
+      {}
+      {}
+      {}
       <Drawer
         variant="permanent"
         sx={{
@@ -41,7 +41,7 @@ function App() {
           [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box' },
         }}
       >
-        <Toolbar /> {/* Espacio para que no quede debajo del AppBar */}
+        <Toolbar /> {}
         <Box sx={{ overflow: 'auto' }}>
           <List>
             <ListItemButton component={Link} to="/">
@@ -56,15 +56,13 @@ function App() {
         </Box>
       </Drawer>
 
-      {/* ======================================================= */}
-      {/* CONTENIDO PRINCIPAL - ¡Esto es lo más importante que falta! */}
-      {/* ======================================================= */}
+      {}
+      {}
+      {}
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
-        <Toolbar /> {/* Otro espacio para el contenido */}
+        <Toolbar /> {}
         
-        {/* El <Outlet/> es el espacio mágico donde React Router
-            renderizará tu Dashboard (HomePage) o tu lista de expedientes.
-            Sin esto, el área de contenido se queda vacía. */}
+        {}
         <Outlet />
       </Box>
     </Box>
