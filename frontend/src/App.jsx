@@ -1,5 +1,3 @@
-// Contenido COMPLETO Y CORRECTO para: frontend/src/App.jsx
-
 import { Link, Outlet } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { Box, AppBar, Toolbar, Drawer, List, ListItemButton, ListItemIcon, ListItemText, Typography, Button } from '@mui/material';
