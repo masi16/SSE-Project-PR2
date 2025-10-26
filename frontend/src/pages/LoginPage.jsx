@@ -21,7 +21,7 @@ function LoginPage() {
       await login(dni, password);
       navigate('/');
     } catch (err) {
-      setError('DNI o contraseña incorrectos');
+      setError('Correo o contraseña incorrectos');
       console.error(err);
     }
   };
@@ -40,7 +40,7 @@ function LoginPage() {
             required
             fullWidth
             id="dni"
-            label="DNI" 
+            label="Correo Electrónico" 
             name="dni"
             autoFocus
             value={dni}
