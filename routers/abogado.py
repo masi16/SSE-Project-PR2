@@ -5,7 +5,7 @@ from typing import List
 from ..config.database import get_db
 from ..services import abogado_service
 from ..schemas import abogado as abogado_schema
-from ..utils.security import get_current_user
+from ..utils.auth import get_current_user
 
 router = APIRouter(tags=["Abogados"], prefix="/abogados")
 
