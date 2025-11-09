@@ -5,7 +5,7 @@ from typing import List, Any
 from ..config.database import get_db
 from ..services import movimiento_service
 from ..schemas import movimiento as movimiento_schema
-from ..utils.security import get_current_user
+from ..utils.auth import get_current_user
 
 router = APIRouter(tags=["Movimientos"], prefix="/movimientos")
 

@@ -5,7 +5,7 @@ from datetime import timedelta
 from ..config.database import get_db
 from ..services import usuario_service
 from ..schemas import token as token_schema
-from ..utils import security
+from ..utils import auth
 from services.auth import (
     authenticate_user,
     create_access_token,
@@ -31,7 +31,7 @@ async def login_for_access_token(
             headers={"WWW-Authenticate": "Bearer"},
         )
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = security.create_access_token(data={"sub": user.email}, expires_delta=access_token_expires)
+    access_token = auth.create_access_token(data={"sub": user.email}, expires_delta=access_token_expires)
     return {"access_token": access_token, "token_type": "bearer"}
 
 @router.get("/me", response_model=token_schema.User)
