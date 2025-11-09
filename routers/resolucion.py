@@ -5,7 +5,7 @@ from typing import List, Any, Optional
 from ..config.database import get_db
 from ..services import resolucion_service
 from ..schemas import resolucion as resolucion_schema
-from ..utils.security import get_current_user
+from ..utils.auth import get_current_user
 
 router = APIRouter(tags=["Resoluciones"], prefix="/resoluciones")
 

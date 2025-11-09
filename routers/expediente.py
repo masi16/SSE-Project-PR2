@@ -5,7 +5,7 @@ from typing import List, Any
 from ..config.database import get_db
 from ..services import expediente_service
 from ..schemas import expediente_schemas
-from ..utils.security import get_current_user
+from ..utils.auth import get_current_user
 
 router = APIRouter(
     prefix="/expedientes",
