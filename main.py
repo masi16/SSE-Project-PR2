@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routers import expediente_router, auth_router # Importa todos tus routers
+from routers import expediente_router, auth_router
 from app.config.database import engine, Base
 
 # Comando para crear todas las tablas en la BD (ejecutar una vez al inicio)

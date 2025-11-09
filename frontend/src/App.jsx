@@ -3,6 +3,7 @@ import { useAuth } from './context/AuthContext';
 import { Box, AppBar, Toolbar, Drawer, List, ListItemButton, ListItemIcon, ListItemText, Typography, Button } from '@mui/material';
 import HomeIcon from '@mui/icons-material/Home'; 
 import GavelIcon from '@mui/icons-material/Gavel'; 
+import PeopleIcon from '@mui/icons-material/People';
 
 const drawerWidth = 240;
 
@@ -20,9 +21,9 @@ function App() {
             Sistema de Expedientes
           </Typography>
           <Box>
-            <Typography component="span" sx={{ mr: 2 }}>
-              Hola, {user?.email}
-            </Typography>
+          <Typography component="span" sx={{ mr: 2 }}>
+          Hola, {user?.email}
+          </Typography>
             <Button color="inherit" onClick={logout}>Cerrar Sesión</Button>
           </Box>
         </Toolbar>
@@ -65,6 +66,22 @@ function App() {
       </Box>
     </Box>
   );
-}
+}<List>
+  <ListItemButton component={Link} to="/">
+    <ListItemIcon><HomeIcon /></ListItemIcon>
+    <ListItemText primary="Dashboard" />
+  </ListItemButton>
+  <ListItemButton component={Link} to="/expedientes">
+    <ListItemIcon><GavelIcon /></ListItemIcon>
+    <ListItemText primary="Expedientes" />
+  </ListItemButton>
+  
+  {/* 👇 2. AÑADE ESTE NUEVO BOTÓN A LA LISTA 👇 */}
+  <ListItemButton component={Link} to="/clientes">
+    <ListItemIcon><PeopleIcon /></ListItemIcon>
+    <ListItemText primary="Clientes" />
+  </ListItemButton>
+
+</List>
 
 export default App;
