@@ -9,8 +9,9 @@ class UsuarioBase(BaseModel):
 class UsuarioCreate(UsuarioBase):
     password: str = Field(..., min_length=8, description="La contraseña debe tener al menos 8 caracteres")
 
-class Usuario(UsuarioBase):
+class UsuarioOut(UsuarioBase):
     id: int
     
     class Config:
         from_attributes = True
+        orm_mode = True

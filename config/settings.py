@@ -1,7 +1,12 @@
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
-    # URL completa para SQLAlchemy async (ej: mysql+aiomysql://user:pass@host:port/dbname)
+    username: str 
+    password: str
+    host: str
+    port: int
+    database: str
+    # URL completa para SQLAlchemy async (ej: mysql+aiomysql://user:pass@host:3306/dbname)
     DATABASE_URL: str
 
     # JWT

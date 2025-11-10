@@ -1,11 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Any
 
-from ..config.database import get_db
-from ..services import movimiento_service
-from ..schemas import movimiento as movimiento_schema
-from ..utils.auth import get_current_user
+from config.database import get_db
+from services import movimiento as movimiento_service
+from schemas import movimientos as movimiento_schema
+from utils.auth import get_current_user
 
 router = APIRouter(tags=["Movimientos"], prefix="/movimientos")
 
@@ -22,8 +22,8 @@ async def create_movimiento(
 
 @router.get("/", response_model=List[movimiento_schema.MovimientoOut])
 async def list_movimientos(
-    skip: int = 0,
-    limit: int = 100,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=500),
     db: AsyncSession = Depends(get_db),
     current_user: Any = Depends(get_current_user),
 ):
@@ -49,7 +49,7 @@ async def update_movimiento(
 ):
     updated = await movimiento_service.update_movimiento(db, movimiento_id, movimiento_in, current_user)
     if not updated:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movimiento no encontrado")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movimiento no encontrado o no autorizado")
     return updated
 
 @router.delete("/{movimiento_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -60,6 +60,6 @@ async def delete_movimiento(
 ):
     deleted = await movimiento_service.delete_movimiento(db, movimiento_id, current_user)
     if not deleted:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movimiento no encontrado")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movimiento no encontrado o no autorizado")
     return None
 

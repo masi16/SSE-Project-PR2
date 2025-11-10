@@ -1,10 +1,10 @@
 from pydantic import BaseModel, Field
 from datetime import date, datetime
 from typing import Optional, List
-from .cliente import Cliente
-from .abogado import Abogado 
-from .movimientos import Movimientos
-from .resolucion import Resolucion
+from .cliente import ClienteOut as Cliente
+from .abogado import AbogadoOut as Abogado 
+from .movimientos import MovimientoOut as Movimientos
+from .resolucion import ResolucionOut as Resolucion
 
 class ExpedienteBase(BaseModel):
     nro_expediente: str = Field(..., max_length=50)
