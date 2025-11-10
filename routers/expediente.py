@@ -1,19 +1,19 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Any
 
-from ..config.database import get_db
-from ..services import expediente_service
-from ..schemas import expediente_schemas
-from ..utils.auth import get_current_user
+from config.database import get_db
+from services import expediente as expediente_service
+from schemas import expediente as expediente_schemas
+from utils.auth import get_current_user
 
 router = APIRouter(
     prefix="/expedientes",
-    tags=["Expedientes"]
+    tags=["Expedientes"],
     # Para proteger rutas: dependencies=[Depends(get_current_active_user)]
 )
 
-@router.post("/", response_model=expediente_schemas.Expediente, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=expediente_schemas.ExpedienteSimple, status_code=status.HTTP_201_CREATED)
 async def create_new_expediente(
     expediente: expediente_schemas.ExpedienteCreate, 
     db: AsyncSession = Depends(get_db),
@@ -29,17 +29,17 @@ async def create_new_expediente(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No se pudo crear el expediente")
     return created
 
-@router.get("/", response_model=List[expediente_schemas.Expediente])
+@router.get("/", response_model=List[expediente_schemas.ExpedienteSimple])
 async def list_expedientes(
-    skip: int = 0,
-    limit: int = 50,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=200),
     db: AsyncSession = Depends(get_db),
     current_user: Any = Depends(get_current_user),
 ):
     """Listado paginado de expedientes."""
     return await expediente_service.get_expedientes(db=db, skip=skip, limit=limit, current_user=current_user)
 
-@router.get("/{expediente_id}", response_model=expediente_schemas.Expediente)
+@router.get("/{expediente_id}", response_model=expediente_schemas.ExpedienteSimple)
 async def read_expediente(
     expediente_id: int,
     db: AsyncSession = Depends(get_db),
@@ -50,7 +50,7 @@ async def read_expediente(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Expediente no encontrado")
     return db_expediente
 
-@router.put("/{expediente_id}", response_model=expediente_schemas.Expediente)
+@router.put("/{expediente_id}", response_model=expediente_schemas.ExpedienteSimple)
 async def update_expediente(
     expediente_id: int,
     expediente_in: expediente_schemas.ExpedienteUpdate,

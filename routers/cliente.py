@@ -1,11 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Any
 
-from ..config.database import get_db
-from ..services import cliente_service 
-from ..schemas import cliente as cliente_schema
-from ..utils.auth import get_current_user
+from config.database import get_db
+from services import cliente as cliente_service 
+from schemas import cliente as cliente_schema
+from utils.auth import get_current_user
 
 router = APIRouter(tags=["Clientes"], prefix="/clientes")
 
@@ -22,8 +22,8 @@ async def create_cliente(
 
 @router.get("/", response_model=List[cliente_schema.ClienteOut])
 async def read_clientes(
-    skip: int = 0,
-    limit: int = 10,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(10, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
     current_user: Any = Depends(get_current_user),
 ):

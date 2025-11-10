@@ -1,11 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List, Any, Optional
+from typing import List, Any
 
-from ..config.database import get_db
-from ..services import resolucion_service
-from ..schemas import resolucion as resolucion_schema
-from ..utils.auth import get_current_user
+from config.database import get_db
+from services import resolucion_service
+from schemas import resolucion as resolucion_schema
+from utils.auth import get_current_user
 
 router = APIRouter(tags=["Resoluciones"], prefix="/resoluciones")
 
@@ -37,12 +37,12 @@ async def create_resolucion_for_expediente(
 
 @router.get("/", response_model=List[resolucion_schema.ResolucionOut])
 async def list_resoluciones(
-    skip: int = 0,
-    limit: int = 100,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=500),
     db: AsyncSession = Depends(get_db),
     current_user: Any = Depends(get_current_user),
 ):
-    return await resolucion_service.get_resoluciones(db, skip=skip, limit=limit)
+    return await resolucion_service.get_resoluciones(db, skip=skip, limit=limit, current_user=current_user)
 
 
 @router.get("/{resolucion_id}", response_model=resolucion_schema.ResolucionOut)
@@ -51,7 +51,7 @@ async def get_resolucion(
     db: AsyncSession = Depends(get_db),
     current_user: Any = Depends(get_current_user),
 ):
-    obj = await resolucion_service.get_resolucion(db, resolucion_id)
+    obj = await resolucion_service.get_resolucion(db, resolucion_id, current_user)
     if not obj:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resolución no encontrada")
     return obj
