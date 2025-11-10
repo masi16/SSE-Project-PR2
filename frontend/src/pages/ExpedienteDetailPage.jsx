@@ -1,4 +1,4 @@
-// Contenido COMPLETO Y CORRECTO para: frontend/src/pages/ExpedienteDetailPage.jsx
+// Contenido SIMPLIFICADO Y DEBUGGEADO para: frontend/src/pages/ExpedienteDetailPage.jsx
 
 import { useState, useEffect } from 'react';
 import { useParams, Link as RouterLink } from 'react-router-dom';
@@ -12,14 +12,18 @@ function ExpedienteDetailPage() {
   const { expedienteId } = useParams();
   const [expediente, setExpediente] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchExpediente = async () => {
       try {
+        console.log('🔍 Buscando expediente con ID:', expedienteId);
         const data = await getExpedienteById(expedienteId);
+        console.log('✅ Datos recibidos:', data);
         setExpediente(data);
-      } catch (error) {
-        console.error("Error al obtener el detalle del expediente:", error);
+      } catch (err) {
+        console.error("❌ Error al obtener el expediente:", err);
+        setError(err.message);
       } finally {
         setLoading(false);
       }
@@ -28,6 +32,8 @@ function ExpedienteDetailPage() {
   }, [expedienteId]);
 
   const generatePdf = () => {
+    console.log('📄 Generando PDF con datos:', expediente);
+
     if (!expediente) {
       alert("Error: No hay datos de expediente para generar el PDF.");
       return;
@@ -35,78 +41,107 @@ function ExpedienteDetailPage() {
 
     try {
       const doc = new jsPDF();
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const pageHeight = doc.internal.pageSize.getHeight();
-      const margin = 15;
+      let yPosition = 20;
 
-      // Encabezado
+      // ===== TÍTULO =====
+      doc.setFontSize(18);
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(22);
-      doc.text("Informe de Expediente", pageWidth / 2, margin + 5, { align: 'center' });
+      doc.text("INFORME DE EXPEDIENTE", 105, yPosition, { align: 'center' });
+      
+      yPosition += 10;
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 20, yPosition);
+      doc.text(`Expediente: ${expediente.nro_expediente || 'N/A'}`, 120, yPosition);
+      
+      yPosition += 15;
+      doc.line(20, yPosition, 190, yPosition);
+
+      // ===== DATOS PRINCIPALES =====
+      yPosition += 10;
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
+      doc.text("DATOS PRINCIPALES", 20, yPosition);
+      
+      yPosition += 8;
       doc.setFont("helvetica", "normal");
       doc.setFontSize(10);
-      doc.text(`Fecha de Emisión: ${new Date().toLocaleDateString()}`, margin, margin + 15);
-      doc.text(`Número de Expediente: ${expediente.nro_expediente || 'N/A'}`, pageWidth - margin, margin + 15, { align: 'right' });
-      doc.setLineWidth(0.5);
-      doc.line(margin, margin + 20, pageWidth - margin, margin + 20);
-
-      // Datos Principales
-      autoTable(doc, {
-        startY: margin + 25,
-        head: [['Datos Principales']],
-        body: [
-          ['Carátula', expediente.caratula || 'Sin carátula'],
-          ['Fecha de Ingreso', expediente.fecha_ingreso ? new Date(expediente.fecha_ingreso).toLocaleDateString() : 'N/A'],
-          ['Juzgado', expediente.juzgado || 'No asignado'],
-        ],
-        theme: 'grid',
-        headStyles: { fillColor: [22, 160, 133] },
-      });
-
-      // Partes Involucradas
-      autoTable(doc, {
-        startY: doc.lastAutoTable.finalY + 10,
-        head: [['Partes Involucradas']],
-        body: [
-          ['Cliente', expediente.cliente ? `${expediente.cliente.nombre} ${expediente.cliente.apellido}` : 'No asignado'],
-          ['Abogado a Cargo', expediente.abogado ? `${expediente.abogado.nombre} ${expediente.abogado.apellido}` : 'No asignado'],
-        ],
-        theme: 'grid',
-        headStyles: { fillColor: [41, 128, 185] },
-      });
       
-      // Historial de Movimientos
-      if (expediente.movimientos && Array.isArray(expediente.movimientos) && expediente.movimientos.length > 0) {
-        autoTable(doc, {
-          startY: doc.lastAutoTable.finalY + 10,
-          head: [['Fecha', 'Descripción del Movimiento']],
-          body: expediente.movimientos.map(mov => [
-            mov.fecha_movimiento ? new Date(mov.fecha_movimiento).toLocaleDateString() : 'N/A',
-            mov.descripcion || 'Sin descripción'
-          ]),
-          theme: 'striped',
-          headStyles: { fillColor: [44, 62, 80] },
+      doc.text(`Número: ${expediente.nro_expediente || 'N/A'}`, 20, yPosition);
+      yPosition += 6;
+      doc.text(`Carátula: ${expediente.caratula || 'N/A'}`, 20, yPosition);
+      yPosition += 6;
+      doc.text(`Juzgado: ${expediente.juzgado || 'N/A'}`, 20, yPosition);
+      yPosition += 6;
+      doc.text(`Fecha de Ingreso: ${expediente.fecha_ingreso ? new Date(expediente.fecha_ingreso).toLocaleDateString() : 'N/A'}`, 20, yPosition);
+
+      // ===== PARTES INVOLUCRADAS =====
+      yPosition += 12;
+      doc.line(20, yPosition, 190, yPosition);
+      yPosition += 8;
+      
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
+      doc.text("PARTES INVOLUCRADAS", 20, yPosition);
+      
+      yPosition += 8;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      
+      const clienteNombre = `${expediente.cliente?.nombre || 'N/A'} ${expediente.cliente?.apellido || ''}`.trim();
+      const clienteEmail = expediente.cliente?.email || 'N/A';
+      const abogadoNombre = `${expediente.abogado?.nombre || 'N/A'} ${expediente.abogado?.apellido || ''}`.trim();
+      const abogadoMatricula = expediente.abogado?.matricula || 'N/A';
+
+      doc.text(`Cliente: ${clienteNombre}`, 20, yPosition);
+      yPosition += 6;
+      doc.text(`Email: ${clienteEmail}`, 20, yPosition);
+      yPosition += 6;
+      doc.text(`Abogado: ${abogadoNombre}`, 20, yPosition);
+      yPosition += 6;
+      doc.text(`Matrícula: ${abogadoMatricula}`, 20, yPosition);
+
+      // ===== MOVIMIENTOS =====
+      yPosition += 12;
+      doc.line(20, yPosition, 190, yPosition);
+      yPosition += 8;
+      
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
+      doc.text("HISTORIAL DE MOVIMIENTOS", 20, yPosition);
+      
+      yPosition += 8;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+
+      if (expediente.movimientos && Array.isArray(expediente.movimientos)) {
+        expediente.movimientos.forEach((mov, index) => {
+          const fecha = mov.fecha_movimiento ? new Date(mov.fecha_movimiento).toLocaleDateString() : 'N/A';
+          const desc = mov.descripcion || 'N/A';
+          
+          doc.text(`${index + 1}. [${fecha}] ${desc}`, 25, yPosition);
+          yPosition += 6;
         });
       }
 
-      // Pie de página
-      const pageCount = doc.internal.getNumberOfPages();
-      for (let i = 1; i <= pageCount; i++) {
-        doc.setPage(i);
-        doc.setFontSize(9);
-        doc.text(`Página ${i} de ${pageCount}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
-      }
-      
+      // ===== GUARDAR PDF =====
       doc.save(`expediente_${expediente.nro_expediente || 'sin_numero'}.pdf`);
+      console.log('✅ PDF generado correctamente');
 
     } catch (error) {
-      console.error("¡ERROR FATAL DENTRO DE generatePdf!:", error);
-      alert("Hubo un error al generar el PDF. Revisa la consola.");
+      console.error("❌ ERROR AL GENERAR PDF:", error);
+      alert("Error al generar PDF: " + error.message);
     }
   };
 
   if (loading) return <CircularProgress />;
+  if (error) return <Typography color="error">Error: {error}</Typography>;
   if (!expediente) return <Typography color="error">Error: No se encontró el expediente.</Typography>;
+
+  const clienteNombre = `${expediente.cliente?.nombre || 'N/A'} ${expediente.cliente?.apellido || ''}`.trim();
+  const clienteEmail = expediente.cliente?.email || 'N/A';
+  const abogadoNombre = `${expediente.abogado?.nombre || 'N/A'} ${expediente.abogado?.apellido || ''}`.trim();
+  const abogadoMatricula = expediente.abogado?.matricula || 'N/A';
 
   return (
     <Paper sx={{ p: 3 }}>
@@ -123,8 +158,10 @@ function ExpedienteDetailPage() {
       <Typography variant="h6" color="text.secondary">Carátula: {expediente.caratula}</Typography>
       <Divider sx={{ my: 2 }} />
       <Typography variant="h5" gutterBottom>Partes Involucradas</Typography>
-      <Typography><strong>Cliente:</strong> {expediente.cliente?.nombre} {expediente.cliente?.apellido} ({expediente.cliente?.email})</Typography>
-      <Typography><strong>Abogado a Cargo:</strong> {expediente.abogado?.nombre} {expediente.abogado?.apellido} (Matrícula: {expediente.abogado?.matricula})</Typography>
+      <Typography><strong>Cliente:</strong> {clienteNombre}</Typography>
+      <Typography><strong>Email:</strong> {clienteEmail}</Typography>
+      <Typography><strong>Abogado a Cargo:</strong> {abogadoNombre}</Typography>
+      <Typography><strong>Matrícula:</strong> {abogadoMatricula}</Typography>
       <Divider sx={{ my: 2 }} />
       <Typography variant="h5" gutterBottom>Historial de Movimientos</Typography>
       <List>
@@ -141,5 +178,4 @@ function ExpedienteDetailPage() {
   );
 }
 
-// 👇 ¡LA LÍNEA MÁS IMPORTANTE! 👇
 export default ExpedienteDetailPage;
