@@ -1,5 +1,3 @@
-// Contenido SIMPLIFICADO Y DEBUGGEADO para: frontend/src/pages/ExpedienteDetailPage.jsx
-
 import { useState, useEffect } from 'react';
 import { useParams, Link as RouterLink } from 'react-router-dom';
 import { Box, Typography, Paper, Button, CircularProgress, Breadcrumbs, Divider, List, ListItem, ListItemText } from '@mui/material';
@@ -17,12 +15,12 @@ function ExpedienteDetailPage() {
   useEffect(() => {
     const fetchExpediente = async () => {
       try {
-        console.log('🔍 Buscando expediente con ID:', expedienteId);
+        console.log('Buscando expediente con ID:', expedienteId);
         const data = await getExpedienteById(expedienteId);
-        console.log('✅ Datos recibidos:', data);
+        console.log('Datos recibidos:', data);
         setExpediente(data);
       } catch (err) {
-        console.error("❌ Error al obtener el expediente:", err);
+        console.error("Error al obtener el expediente:", err);
         setError(err.message);
       } finally {
         setLoading(false);
@@ -43,7 +41,7 @@ function ExpedienteDetailPage() {
       const doc = new jsPDF();
       let yPosition = 20;
 
-      // ===== TÍTULO =====
+    
       doc.setFontSize(18);
       doc.setFont("helvetica", "bold");
       doc.text("INFORME DE EXPEDIENTE", 105, yPosition, { align: 'center' });
@@ -57,7 +55,7 @@ function ExpedienteDetailPage() {
       yPosition += 15;
       doc.line(20, yPosition, 190, yPosition);
 
-      // ===== DATOS PRINCIPALES =====
+    
       yPosition += 10;
       doc.setFont("helvetica", "bold");
       doc.setFontSize(12);
@@ -75,7 +73,7 @@ function ExpedienteDetailPage() {
       yPosition += 6;
       doc.text(`Fecha de Ingreso: ${expediente.fecha_ingreso ? new Date(expediente.fecha_ingreso).toLocaleDateString() : 'N/A'}`, 20, yPosition);
 
-      // ===== PARTES INVOLUCRADAS =====
+     
       yPosition += 12;
       doc.line(20, yPosition, 190, yPosition);
       yPosition += 8;
@@ -101,7 +99,7 @@ function ExpedienteDetailPage() {
       yPosition += 6;
       doc.text(`Matrícula: ${abogadoMatricula}`, 20, yPosition);
 
-      // ===== MOVIMIENTOS =====
+      
       yPosition += 12;
       doc.line(20, yPosition, 190, yPosition);
       yPosition += 8;
@@ -124,12 +122,12 @@ function ExpedienteDetailPage() {
         });
       }
 
-      // ===== GUARDAR PDF =====
+  
       doc.save(`expediente_${expediente.nro_expediente || 'sin_numero'}.pdf`);
       console.log('✅ PDF generado correctamente');
 
     } catch (error) {
-      console.error("❌ ERROR AL GENERAR PDF:", error);
+      console.error("ERROR AL GENERAR PDF:", error);
       alert("Error al generar PDF: " + error.message);
     }
   };

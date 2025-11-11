@@ -10,7 +10,7 @@ from utils.auth import get_current_user
 router = APIRouter(
     prefix="/expedientes",
     tags=["Expedientes"],
-    # Para proteger rutas: dependencies=[Depends(get_current_active_user)]
+   
 )
 
 @router.post("/", response_model=expediente_schemas.ExpedienteSimple, status_code=status.HTTP_201_CREATED)

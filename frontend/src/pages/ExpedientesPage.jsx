@@ -1,5 +1,3 @@
-// Contenido DE DEPURACIÓN para: frontend/src/pages/ExpedientesPage.jsx
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Button, Typography, Dialog, DialogTitle, DialogContent, DialogActions, TextField } from '@mui/material';
@@ -64,7 +62,6 @@ function ExpedientesPage() {
       fetchExpedientes();
       alert('¡Expediente creado con éxito!');
     } catch (error) {
-      // ESTE ES EL LUGAR MÁS IMPORTANTE A MIRAR
       console.error("¡ERROR DENTRO DE handleCreateSubmit!:", error);
       alert('Error al crear el expediente. Revisa la consola para más detalles.');
     }
@@ -103,22 +100,18 @@ function ExpedientesPage() {
   );
 }
 const handleRowClick = (params) => {
-    // Chivato #1: ¿Se está ejecutando esta función?
+    
     console.log("Se hizo clic en una fila.");
-    
-    // Chivato #2: ¿Qué información estamos recibiendo del clic?
+   
     console.log("Datos de la fila (params):", params);
-    
-    // Chivato #3: ¿Tenemos un ID válido?
+  
     console.log("ID del expediente a navegar:", params.id);
     
-    // Chivato #4: ¿A qué URL estamos intentando ir?
     const targetUrl = `/expedientes/${params.id}`;
     console.log("Intentando navegar a:", targetUrl);
     
     navigate(targetUrl);
     
-    // Chivato #5: ¿Se ejecutó el comando de navegación?
     console.log("Comando de navegación ejecutado.");
   };
 

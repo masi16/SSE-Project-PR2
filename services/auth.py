@@ -12,7 +12,7 @@ from schemas.auth import TokenData, UsuarioInDB
 # --- CONFIGURACIÓN JWT ---
 SECRET_KEY = "esta_es_mi_palabra_secreta"
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 5
+ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
 # --- OBJETOS ---
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

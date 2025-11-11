@@ -1,11 +1,7 @@
-// Contenido COMPLETO para: frontend/src/components/PublicLayout.jsx
-
 import { Box } from '@mui/material';
 import { Outlet } from 'react-router-dom';
 
 function PublicLayout() {
-  // Este Box actúa como un contenedor que ocupa toda la pantalla
-  // y centra su contenido (el <Outlet />) tanto vertical como horizontalmente.
   return (
     <Box 
       sx={{

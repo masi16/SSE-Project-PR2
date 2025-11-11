@@ -1,5 +1,3 @@
-// Contenido COMPLETO Y CORRECTO para: frontend/src/pages/ClientesPage.jsx
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Button, Typography } from '@mui/material';
@@ -61,5 +59,4 @@ function ClientesPage() {
   );
 }
 
-// 👇 ¡ESTA ES LA LÍNEA QUE FALTA! 👇
 export default ClientesPage;

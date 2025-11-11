@@ -1,10 +1,7 @@
-// Contenido CORRECTO para: frontend/src/components/ExpedienteForm.jsx
-
 import { useState } from 'react';
 import axios from 'axios';
 
 function ExpedienteForm() {
-  // ... (todo el código del useState y la función handleSubmit)
   const [nroExpediente, setNroExpediente] = useState('');
   const [caratula, setCaratula] = useState('');
   const [fechaIngreso, setFechaIngreso] = useState('');
@@ -68,5 +65,4 @@ function ExpedienteForm() {
   );
 }
 
-// 👇 ¡ESTA ES LA LÍNEA QUE PROBABLEMENTE FALTA! 👇
 export default ExpedienteForm;

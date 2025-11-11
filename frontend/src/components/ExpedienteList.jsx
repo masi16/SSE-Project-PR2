@@ -1,5 +1,3 @@
-// Contenido FINAL Y CORREGIDO para: frontend/src/pages/ExpedienteDetailPage.jsx
-
 import { useState, useEffect } from 'react';
 import { useParams, Link as RouterLink } from 'react-router-dom';
 import { Box, Typography, Paper, Button, CircularProgress, Breadcrumbs, Divider, List, ListItem, ListItemText } from '@mui/material';
@@ -39,7 +37,6 @@ function ExpedienteDetailPage() {
       const pageHeight = doc.internal.pageSize.getHeight();
       const margin = 15;
 
-      // Encabezado
       doc.setFont("helvetica", "bold");
       doc.setFontSize(22);
       doc.text("Informe de Expediente", pageWidth / 2, margin + 5, { align: 'center' });
@@ -50,19 +47,16 @@ function ExpedienteDetailPage() {
       doc.setLineWidth(0.5);
       doc.line(margin, margin + 20, pageWidth - margin, margin + 20);
 
-      // Extrae datos del cliente de forma segura
       const clienteNombre = expediente.cliente?.nombre || 'No asignado';
       const clienteApellido = expediente.cliente?.apellido || '';
       const clienteEmail = expediente.cliente?.email || 'N/A';
       const clienteCompleto = `${clienteNombre} ${clienteApellido}`.trim();
 
-      // Extrae datos del abogado de forma segura
       const abogadoNombre = expediente.abogado?.nombre || 'No asignado';
       const abogadoApellido = expediente.abogado?.apellido || '';
       const abogadoMatricula = expediente.abogado?.matricula || 'N/A';
       const abogadoCompleto = `${abogadoNombre} ${abogadoApellido}`.trim();
 
-      // Datos Principales
       const datosBody = [
         ['Carátula', expediente.caratula || 'Sin carátula'],
         ['Fecha de Ingreso', expediente.fecha_ingreso ? new Date(expediente.fecha_ingreso).toLocaleDateString() : 'N/A'],
@@ -79,7 +73,6 @@ function ExpedienteDetailPage() {
         columnStyles: { 0: { cellWidth: 50 }, 1: { cellWidth: 'auto' } },
       });
 
-      // Partes Involucradas
       autoTable(doc, {
         startY: doc.lastAutoTable.finalY + 10,
         head: [['Partes Involucradas']],
@@ -93,7 +86,6 @@ function ExpedienteDetailPage() {
         headStyles: { fillColor: [41, 128, 185] },
       });
       
-      // Historial de Movimientos
       if (expediente.movimientos && Array.isArray(expediente.movimientos) && expediente.movimientos.length > 0) {
         autoTable(doc, {
           startY: doc.lastAutoTable.finalY + 10,
@@ -107,7 +99,6 @@ function ExpedienteDetailPage() {
         });
       }
 
-      // Pie de página
       const pageCount = doc.internal.getNumberOfPages();
       for (let i = 1; i <= pageCount; i++) {
         doc.setPage(i);
@@ -126,7 +117,6 @@ function ExpedienteDetailPage() {
   if (loading) return <CircularProgress />;
   if (!expediente) return <Typography color="error">Error: No se encontró el expediente.</Typography>;
 
-  // Extrae datos con valores por defecto
   const clienteNombre = expediente.cliente?.nombre || 'No disponible';
   const clienteApellido = expediente.cliente?.apellido || '';
   const clienteEmail = expediente.cliente?.email || 'N/A';

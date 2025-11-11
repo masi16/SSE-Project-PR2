@@ -17,33 +17,21 @@ class ExpedienteBase(BaseModel):
     fk_estado_id: Optional[int] = None
 
 class ExpedienteCreate(ExpedienteBase):
-    # Podríamos añadir aquí un campo para el primer movimiento si quisiéramos
-    # primer_movimiento_desc: str
     pass
 
 class ExpedienteUpdate(BaseModel):
-    # Para actualizar, solo permitimos cambiar ciertos campos
     caratula: Optional[str] = Field(None, max_length=255)
     fk_estado_id: Optional[int] = None
-    # No permitimos cambiar el cliente o el abogado, por ejemplo
 
-# --- SCHEMAS DE RESPUESTA ---
-
-# Schema básico de respuesta (para listas, donde no queremos todos los detalles)
 class ExpedienteSimple(ExpedienteBase):
     id: int
     
     class Config:
         from_attributes = True
 
-# Schema de respuesta detallado (para cuando se pide un solo expediente)
 class ExpedienteDetallado(ExpedienteSimple):
-    # Anidamos la información de las claves foráneas
-    # El frontend recibirá el objeto completo del cliente, no solo su ID.
     cliente: Cliente
     abogado: Abogado
-    
-    # También podemos anidar las listas de movimientos y resoluciones
     movimientos: List[Movimientos] = []
     resoluciones: List[Resolucion] = []
     
