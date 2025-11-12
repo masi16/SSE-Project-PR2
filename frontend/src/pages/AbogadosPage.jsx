@@ -1,19 +1,30 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Box, Button, Typography, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Alert } from '@mui/material';
+import { 
+  Box, 
+  Button, 
+  Typography, 
+  Dialog, 
+  DialogTitle, 
+  DialogContent, 
+  DialogActions, 
+  TextField,
+  Alert,
+  CircularProgress
+} from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import AddIcon from '@mui/icons-material/Add';
 
 const columns = [
-  { field: 'id', headerName: 'ID', width: 90 },
-  { field: 'nombre', headerName: 'Nombre', width: 150 },
-  { field: 'apellido', headerName: 'Apellido', width: 150 },
-  { field: 'email', headerName: 'Email', flex: 1 },
-  { field: 'telefono', headerName: 'Teléfono', width: 200 },
+  { field: 'id', headerName: 'ID', width: 70 },
+  { field: 'nombre', headerName: 'Nombre', width: 120 },
+  { field: 'apellido', headerName: 'Apellido', width: 120 },
+  { field: 'matricula', headerName: 'Matrícula', width: 120 },
+  { field: 'telefono', headerName: 'Teléfono', width: 150 },
 ];
 
-function ClientesPage() {
-  const [clientes, setClientes] = useState([]);
+function AbogadosPage() {
+  const [abogados, setAbogados] = useState([]);
   const [loading, setLoading] = useState(true);
   const [openModal, setOpenModal] = useState(false);
   const [error, setError] = useState('');
@@ -21,27 +32,27 @@ function ClientesPage() {
   const [formData, setFormData] = useState({
     nombre: '',
     apellido: '',
-    email: '',
+    matricula: '',
     telefono: ''
   });
   const { api } = useAuth();
 
-  // Cargar clientes
-  const fetchClientes = async () => {
+  // Cargar abogados
+  const fetchAbogados = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/clientes/');
-      setClientes(response.data);
+      const response = await api.get('/abogados/');
+      setAbogados(response.data);
     } catch (error) {
-      console.error("Error al obtener clientes:", error);
-      setError('Error al cargar los clientes');
+      console.error("Error al obtener abogados:", error);
+      setError('Error al cargar los abogados');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchClientes();
+    fetchAbogados();
   }, []);
 
   const handleOpenModal = () => {
@@ -52,7 +63,7 @@ function ClientesPage() {
 
   const handleCloseModal = () => {
     setOpenModal(false);
-    setFormData({ nombre: '', apellido: '', email: '', telefono: '' });
+    setFormData({ nombre: '', apellido: '', matricula: '', telefono: '' });
     setError('');
     setSuccess('');
   };
@@ -65,41 +76,41 @@ function ClientesPage() {
     }));
   };
 
-  const handleCreateCliente = async (e) => {
+  const handleCreateAbogado = async (e) => {
     e.preventDefault();
     
     // Validaciones
-    if (!formData.nombre || !formData.apellido || !formData.email) {
-      setError('Nombre, apellido y email son obligatorios');
+    if (!formData.nombre || !formData.apellido || !formData.matricula) {
+      setError('Nombre, apellido y matrícula son obligatorios');
       return;
     }
 
     try {
       setError('');
-      const response = await api.post('/clientes/', formData);
+      const response = await api.post('/abogados/', formData);
       
-      setSuccess('Cliente creado exitosamente');
-      console.log('Cliente creado:', response.data);
+      setSuccess('Abogado creado exitosamente');
+      console.log('Abogado creado:', response.data);
       
       // Actualizar la lista
-      await fetchClientes();
+      await fetchAbogados();
       
       // Cerrar el modal después de 1 segundo
       setTimeout(() => {
         handleCloseModal();
       }, 1000);
     } catch (error) {
-      console.error('Error al crear cliente:', error);
-      setError(error.response?.data?.detail || 'Error al crear el cliente');
+      console.error('Error al crear abogado:', error);
+      setError(error.response?.data?.detail || 'Error al crear el abogado');
     }
   };
 
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant="h4">Gestión de Clientes</Typography>
+        <Typography variant="h4">Gestión de Abogados</Typography>
         <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenModal}>
-          Crear Cliente
+          Crear Abogado
         </Button>
       </Box>
       
@@ -108,7 +119,7 @@ function ClientesPage() {
       
       <Box sx={{ height: '70vh', width: '100%' }}>
         <DataGrid
-          rows={clientes}
+          rows={abogados}
           columns={columns}
           loading={loading}
           pageSizeOptions={[5, 10, 25]}
@@ -119,9 +130,9 @@ function ClientesPage() {
         />
       </Box>
 
-      {/* Modal para crear cliente */}
+      {/* Modal para crear abogado */}
       <Dialog open={openModal} onClose={handleCloseModal} maxWidth="sm" fullWidth>
-        <DialogTitle>Crear Nuevo Cliente</DialogTitle>
+        <DialogTitle>Crear Nuevo Abogado</DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
             <TextField
@@ -142,12 +153,12 @@ function ClientesPage() {
             />
             <TextField
               fullWidth
-              label="Email"
-              name="email"
-              type="email"
-              value={formData.email}
+              label="Matrícula"
+              name="matricula"
+              value={formData.matricula}
               onChange={handleInputChange}
               required
+              placeholder="Ej: 12345"
             />
             <TextField
               fullWidth
@@ -155,13 +166,14 @@ function ClientesPage() {
               name="telefono"
               value={formData.telefono}
               onChange={handleInputChange}
+              placeholder="Ej: +54 911 2345678"
             />
           </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseModal}>Cancelar</Button>
-          <Button onClick={handleCreateCliente} variant="contained">
-            Crear Cliente
+          <Button onClick={handleCreateAbogado} variant="contained">
+            Crear Abogado
           </Button>
         </DialogActions>
       </Dialog>
@@ -169,4 +181,4 @@ function ClientesPage() {
   );
 }
 
-export default ClientesPage;
+export default AbogadosPage;

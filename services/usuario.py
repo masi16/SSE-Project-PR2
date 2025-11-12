@@ -1,110 +1,141 @@
-from typing import List
-from fastapi import HTTPException
+from typing import List, Optional
+from fastapi import HTTPException, status
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
-
-# Importaciones necesarias
 from schemas.usuario import UsuarioCreate, UsuarioOut
-from utils.auth import get_password_hash # ¡MUY IMPORTANTE para la seguridad!
+from utils.auth import get_password_hash, verify_password
+import traceback
 
-# ======================================================================
-# Nota: TODAS las funciones ahora reciben 'db: AsyncSession' como parámetro.
-# Ya no se usa 'get_db()' dentro de las funciones.
-# ======================================================================
+async def _get_user_by_email_with_password(email: str, db: AsyncSession):
+    try:
+        query = text("""
+            SELECT id, email, rol, fk_abogado_id, password_hash 
+            FROM usuarios 
+            WHERE email = :email
+        """)
+        result = await db.execute(query, {"email": email})
+        row = result.mappings().one_or_none()
+        if row:
+            return dict(row)
+        return None
+    except Exception as e:
+        print(f"Error en _get_user_by_email_with_password: {str(e)}")
+        traceback.print_exc()
+        return None
 
-async def get_usuario_by_email(email: str, db: AsyncSession) -> UsuarioOut | None:
-    query = text("SELECT id, email, rol, fk_abogado_id, password_hash FROM usuarios WHERE email = :email")
-    result = await db.execute(query, {"email": email})
-    user_row = result.mappings().one_or_none()
-
-    if user_row:
-        return UsuarioOut(**user_row)
+async def get_usuario_by_email(email: str, db: AsyncSession) -> Optional[UsuarioOut]:
+    user_data = await _get_user_by_email_with_password(email, db)
+    if user_data:
+        return UsuarioOut.model_validate(user_data)
     return None
 
-async def create_usuario(usuario_data: UsuarioCreate, db: AsyncSession) -> UsuarioOut:
-    # 1. Hashear la contraseña ANTES de guardarla en la base de datos
-    hashed_password = get_password_hash(usuario_data.password)
+async def authenticate_user(db: AsyncSession, email: str, password: str) -> Optional[UsuarioOut]:
+    user_with_password = await _get_user_by_email_with_password(email=email, db=db)
+    
+    if not user_with_password:
+        return None
+    
+    if not verify_password(password, user_with_password['password_hash']):
+        return None
+    
+    return UsuarioOut.model_validate(user_with_password)
 
-    query = text("""
-        INSERT INTO usuarios (email, rol, fk_abogado_id, password_hash)
-        VALUES (:email, :rol, :fk_abogado_id, :password_hash)
-        RETURNING id, email, rol, fk_abogado_id
-    """)
-    
-    # Preparamos los valores para la consulta
-    values = {
-        "email": usuario_data.email,
-        "rol": "abogado", # Asignamos el rol por defecto aquí
-        "fk_abogado_id": None, # Asumimos que no se asigna al registrarse
-        "password_hash": hashed_password
-    }
-    
+async def create_usuario(usuario_data: UsuarioCreate, db: AsyncSession) -> Optional[UsuarioOut]:
     try:
-        # 2. Ejecutar la consulta usando la sesión 'db'
+        existing_user = await get_usuario_by_email(email=usuario_data.email, db=db)
+        if existing_user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Ya existe un usuario registrado con este email.",
+            )
+        
+        hashed_password = get_password_hash(usuario_data.password)
+
+        # Para MariaDB: INSERT sin RETURNING
+        query = text("""
+            INSERT INTO usuarios (email, rol, fk_abogado_id, password_hash)
+            VALUES (:email, :rol, :fk_abogado_id, :password_hash)
+        """)
+        
+        values = {
+            "email": usuario_data.email,
+            "rol": usuario_data.rol,
+            "fk_abogado_id": usuario_data.fk_abogado_id,
+            "password_hash": hashed_password
+        }
+        
         result = await db.execute(query, values)
-        # 3. Confirmar la transacción
         await db.commit()
         
-        new_user_row = result.mappings().one()
-        return UsuarioOut(**new_user_row)
+        # Obtener el usuario creado por email
+        created_user = await get_usuario_by_email(email=usuario_data.email, db=db)
+        return created_user
+        
+    except HTTPException:
+        raise
     except Exception as e:
         await db.rollback()
-        # En producción, loggearías el error 'e'
-        raise HTTPException(status_code=500, detail="Error al crear el usuario.")
+        print(f"Error en create_usuario: {str(e)}")
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            detail=f"Error al crear el usuario: {str(e)}"
+        )
 
-async def get_usuarios(db: AsyncSession) -> List[UsuarioOut]:
-    query = text("SELECT id, email, rol, fk_abogado_id FROM usuarios")
-    result = await db.execute(query)
-    user_rows = result.mappings().all()
-    return [UsuarioOut(**row) for row in user_rows]
-
-async def get_usuario(usuario_id: int, db: AsyncSession) -> UsuarioOut:
-    query = text("SELECT id, email, rol, fk_abogado_id FROM usuarios WHERE id = :id")
-    result = await db.execute(query, {"id": usuario_id})
-    user_row = result.mappings().one_or_none()
-    
-    if not user_row:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+async def get_all_usuarios(db: AsyncSession) -> List[UsuarioOut]:
+    try:
+        query = text("""
+            SELECT id, email, rol, fk_abogado_id 
+            FROM usuarios
+        """)
         
-    return UsuarioOut(**user_row)
+        result = await db.execute(query)
+        usuarios = [UsuarioOut.model_validate(row) for row in result.mappings()]
+        return usuarios
+    except Exception as e:
+        print(f"Error en get_all_usuarios: {str(e)}")
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al obtener usuarios: {str(e)}"
+        )
 
-async def update_usuario(usuario_id: int, usuario_data: UsuarioCreate, db: AsyncSession) -> UsuarioOut:
-    # Primero, verifica que el usuario exista
-    await get_usuario(usuario_id, db)
+async def get_usuario_by_id(usuario_id: int, db: AsyncSession) -> Optional[UsuarioOut]:
+    try:
+        query = text("""
+            SELECT id, email, rol, fk_abogado_id 
+            FROM usuarios 
+            WHERE id = :id
+        """)
+        
+        result = await db.execute(query, {"id": usuario_id})
+        row = result.mappings().one_or_none()
+        if row:
+            return UsuarioOut.model_validate(row)
+        return None
+    except Exception as e:
+        print(f"Error en get_usuario_by_id: {str(e)}")
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al obtener usuario: {str(e)}"
+        )
 
-    # Hashea la nueva contraseña si se proporciona
-    hashed_password = get_password_hash(usuario_data.password)
-
-    query = text("""
-        UPDATE usuarios
-        SET email = :email, rol = :rol, fk_abogado_id = :fk_abogado_id, password_hash = :password_hash
-        WHERE id = :id
-        RETURNING id, email, rol, fk_abogado_id
-    """)
-    
-    values = usuario_data.dict()
-    values.pop('password', None)
-    values['password_hash'] = hashed_password
-    values['id'] = usuario_id
-    
-    result = await db.execute(query, values)
-    await db.commit()
-    
-    updated_user_row = result.mappings().one()
-    return UsuarioOut(**updated_user_row)
-
-async def delete_usuario(usuario_id: int, db: AsyncSession) -> dict:
-    # Primero, verifica que el usuario exista
-    await get_usuario(usuario_id, db)
-    
-    query = text("DELETE FROM usuarios WHERE id = :id")
-    
-    result = await db.execute(query, {"id": usuario_id})
-    await db.commit()
-
-    # Comprobamos si se eliminó alguna fila
-    if result.rowcount == 0:
-        # Esto es redundante si get_usuario ya lanzó el 404, pero es una buena práctica
-        raise HTTPException(status_code=404, detail="Usuario no encontrado para eliminar")
-    
-    return {"message": "Usuario eliminado exitosamente"}
+async def delete_usuario(usuario_id: int, db: AsyncSession) -> bool:
+    try:
+        query = text("""
+            DELETE FROM usuarios 
+            WHERE id = :id
+        """)
+        
+        result = await db.execute(query, {"id": usuario_id})
+        await db.commit()
+        return result.rowcount > 0
+    except Exception as e:
+        await db.rollback()
+        print(f"Error en delete_usuario: {str(e)}")
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al eliminar usuario: {str(e)}"
+        )
