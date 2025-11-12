@@ -9,10 +9,13 @@ import PublicLayout from './components/PublicLayout';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import HomePage from './pages/HomePage';
+import AbogadosPage from './pages/AbogadosPage';
 import ExpedientesPage from './pages/ExpedientesPage';
 import ExpedienteDetailPage from './pages/ExpedienteDetailPage';
 import ClientesPage from './pages/ClientesPage';
 import './index.css';
+import MovimientosPage from './pages/MovimientosPage';
+import ResolucionesPage from './pages/ResolucionesPage';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
@@ -27,6 +30,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             </Route>
             <Route element={<ProtectedRoute />}>
               <Route path="/" element={<HomePage />} />
+              <Route path="/movimientos" element={<MovimientosPage />} />
+<Route path="/resoluciones" element={<ResolucionesPage />} />
+              <Route path="/abogados" element={<AbogadosPage />} />
               <Route path="/expedientes" element={<ExpedientesPage />} />
               <Route path="/expedientes/:expedienteId" element={<ExpedienteDetailPage />} />
               <Route path="/clientes" element={<ClientesPage />} />

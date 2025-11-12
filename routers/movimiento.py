@@ -62,4 +62,3 @@ async def delete_movimiento(
     if not deleted:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movimiento no encontrado o no autorizado")
     return None
-

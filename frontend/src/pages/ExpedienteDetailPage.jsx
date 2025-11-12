@@ -2,144 +2,181 @@ import { useState, useEffect } from 'react';
 import { useParams, Link as RouterLink } from 'react-router-dom';
 import { Box, Typography, Paper, Button, CircularProgress, Breadcrumbs, Divider, List, ListItem, ListItemText } from '@mui/material';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
-import { getExpedienteById } from '../api/mockApi';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { useAuth } from '../context/AuthContext'; 
 
 function ExpedienteDetailPage() {
   const { expedienteId } = useParams();
+  const { api } = useAuth();
+
+  // Estado para los datos principales y de detalle
   const [expediente, setExpediente] = useState(null);
+  const [cliente, setCliente] = useState(null);
+  const [abogado, setAbogado] = useState(null);
+  const [movimientos, setMovimientos] = useState([]);
+  
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Efecto para buscar el expediente principal
   useEffect(() => {
     const fetchExpediente = async () => {
       try {
-        console.log('Buscando expediente con ID:', expedienteId);
-        const data = await getExpedienteById(expedienteId);
-        console.log('Datos recibidos:', data);
-        setExpediente(data);
+        setLoading(true);
+        const response = await api.get(`/expedientes/${expedienteId}`);
+        setExpediente(response.data);
       } catch (err) {
         console.error("Error al obtener el expediente:", err);
-        setError(err.message);
-      } finally {
-        setLoading(false);
+        setError(err.message || 'No se pudo cargar el expediente');
+        setLoading(false); // Detener la carga si hay error
       }
     };
     fetchExpediente();
-  }, [expedienteId]);
+  }, [expedienteId, api]);
 
-  const generatePdf = () => {
-    console.log('📄 Generando PDF con datos:', expediente);
+  // --- INICIO DE LA CORRECCIÓN ---
+  // Efecto para buscar los detalles (cliente, abogado, movimientos) UNA VEZ que tenemos el expediente
+  useEffect(() => {
+    if (!expediente) return;
 
-    if (!expediente) {
-      alert("Error: No hay datos de expediente para generar el PDF.");
-      return;
-    }
+    const fetchDetails = async () => {
+      try {
+        // Creamos un array de promesas para ejecutar las llamadas en paralelo
+        const promises = [
+          api.get(`/clientes/${expediente.fk_cliente_id}`),
+          api.get(`/abogados/${expediente.fk_abogado_id}`),
+          api.get('/movimientos/') // Obtenemos todos los movimientos
+        ];
 
-    try {
-      const doc = new jsPDF();
-      let yPosition = 20;
+        // Esperamos a que todas las llamadas terminen
+        const [clienteResponse, abogadoResponse, movimientosResponse] = await Promise.all(promises);
 
-    
-      doc.setFontSize(18);
-      doc.setFont("helvetica", "bold");
-      doc.text("INFORME DE EXPEDIENTE", 105, yPosition, { align: 'center' });
-      
-      yPosition += 10;
-      doc.setFontSize(10);
-      doc.setFont("helvetica", "normal");
-      doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 20, yPosition);
-      doc.text(`Expediente: ${expediente.nro_expediente || 'N/A'}`, 120, yPosition);
-      
-      yPosition += 15;
-      doc.line(20, yPosition, 190, yPosition);
+        setCliente(clienteResponse.data);
+        setAbogado(abogadoResponse.data);
 
-    
-      yPosition += 10;
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(12);
-      doc.text("DATOS PRINCIPALES", 20, yPosition);
-      
-      yPosition += 8;
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(10);
-      
-      doc.text(`Número: ${expediente.nro_expediente || 'N/A'}`, 20, yPosition);
-      yPosition += 6;
-      doc.text(`Carátula: ${expediente.caratula || 'N/A'}`, 20, yPosition);
-      yPosition += 6;
-      doc.text(`Juzgado: ${expediente.juzgado || 'N/A'}`, 20, yPosition);
-      yPosition += 6;
-      doc.text(`Fecha de Ingreso: ${expediente.fecha_ingreso ? new Date(expediente.fecha_ingreso).toLocaleDateString() : 'N/A'}`, 20, yPosition);
+        // Filtramos los movimientos para quedarnos solo con los de este expediente
+        const expedienteMovimientos = movimientosResponse.data.filter(
+          mov => mov.fk_expediente_id === expediente.id
+        );
+        setMovimientos(expedienteMovimientos);
 
-     
-      yPosition += 12;
-      doc.line(20, yPosition, 190, yPosition);
-      yPosition += 8;
-      
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(12);
-      doc.text("PARTES INVOLUCRADAS", 20, yPosition);
-      
-      yPosition += 8;
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(10);
-      
-      const clienteNombre = `${expediente.cliente?.nombre || 'N/A'} ${expediente.cliente?.apellido || ''}`.trim();
-      const clienteEmail = expediente.cliente?.email || 'N/A';
-      const abogadoNombre = `${expediente.abogado?.nombre || 'N/A'} ${expediente.abogado?.apellido || ''}`.trim();
-      const abogadoMatricula = expediente.abogado?.matricula || 'N/A';
-
-      doc.text(`Cliente: ${clienteNombre}`, 20, yPosition);
-      yPosition += 6;
-      doc.text(`Email: ${clienteEmail}`, 20, yPosition);
-      yPosition += 6;
-      doc.text(`Abogado: ${abogadoNombre}`, 20, yPosition);
-      yPosition += 6;
-      doc.text(`Matrícula: ${abogadoMatricula}`, 20, yPosition);
-
-      
-      yPosition += 12;
-      doc.line(20, yPosition, 190, yPosition);
-      yPosition += 8;
-      
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(12);
-      doc.text("HISTORIAL DE MOVIMIENTOS", 20, yPosition);
-      
-      yPosition += 8;
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(9);
-
-      if (expediente.movimientos && Array.isArray(expediente.movimientos)) {
-        expediente.movimientos.forEach((mov, index) => {
-          const fecha = mov.fecha_movimiento ? new Date(mov.fecha_movimiento).toLocaleDateString() : 'N/A';
-          const desc = mov.descripcion || 'N/A';
-          
-          doc.text(`${index + 1}. [${fecha}] ${desc}`, 25, yPosition);
-          yPosition += 6;
-        });
+      } catch (err) {
+        console.error("Error al obtener los detalles adicionales:", err);
+        setError("No se pudieron cargar los detalles del cliente o abogado.");
+      } finally {
+        setLoading(false); // Terminamos la carga cuando todos los datos están listos
       }
+    };
 
-  
-      doc.save(`expediente_${expediente.nro_expediente || 'sin_numero'}.pdf`);
-      console.log('✅ PDF generado correctamente');
+    fetchDetails();
+  }, [expediente, api]); // Este efecto se dispara cuando 'expediente' cambia
 
-    } catch (error) {
-      console.error("ERROR AL GENERAR PDF:", error);
-      alert("Error al generar PDF: " + error.message);
+ // En frontend/src/pages/ExpedienteDetailPage.jsx
+
+const generatePdf = () => {
+  if (!expediente || !cliente || !abogado) {
+    alert("Error: Aún no se han cargado todos los datos para generar el PDF.");
+    return;
+  }
+
+  try {
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 15;
+    let yPosition = 20; // Posición vertical inicial
+
+    // --- TÍTULO ---
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
+    doc.text("ANÁLISIS DE EXPEDIENTE", pageWidth / 2, yPosition, { align: 'center' });
+    yPosition += 15; // Aumentar espacio
+
+    // --- FUNCIÓN AUXILIAR PARA ESCRIBIR LÍNEAS DE DATOS ---
+    const writeDataLine = (label, value) => {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      doc.text(`${label}:`, margin, yPosition);
+      
+      doc.setFont("helvetica", "normal");
+      doc.text(value || 'N/A', margin + 45, yPosition); // Alinea el valor
+      yPosition += 7; // Espacio entre líneas
+    };
+
+    // --- BLOQUE DE DATOS PRINCIPALES ---
+    writeDataLine("NÚMERO DE EXPEDIENTE", expediente.nro_expediente);
+    writeDataLine("CARÁTULA", expediente.caratula);
+    writeDataLine("CLIENTE (DEMANDANTE)", `${cliente.nombre} ${cliente.apellido}`);
+    writeDataLine("ABOGADO A CARGO", `${abogado.nombre} ${abogado.apellido} (Mat: ${abogado.matricula})`);
+    writeDataLine("FECHA DE INGRESO", new Date(expediente.fecha_ingreso).toLocaleDateString());
+    yPosition += 10;
+
+    // --- SECCIÓN DE DETALLES DEL CASO ---
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.text("DETALLES DEL PROCESO", pageWidth / 2, yPosition, { align: 'center' });
+    yPosition += 10;
+    
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.text("PARTES INVOLUCRADAS:", margin, yPosition);
+    yPosition += 7;
+
+    doc.setFont("helvetica", "normal");
+    const clientText = `El cliente principal en este caso es ${cliente.nombre} ${cliente.apellido}, con correo electrónico de contacto ${cliente.email}.`;
+    // Usamos splitTextToSize para que el texto largo se ajuste automáticamente al ancho de la página
+    const clientLines = doc.splitTextToSize(clientText, pageWidth - margin * 2);
+    doc.text(clientLines, margin, yPosition);
+    yPosition += clientLines.length * 5 + 5; // Ajustar Y según el número de líneas
+
+    const lawyerText = `El caso está siendo gestionado por el abogado ${abogado.nombre} ${abogado.apellido}, cuya matrícula profesional es ${abogado.matricula}.`;
+    const lawyerLines = doc.splitTextToSize(lawyerText, pageWidth - margin * 2);
+    doc.text(lawyerLines, margin, yPosition);
+    yPosition += lawyerLines.length * 5 + 10;
+
+
+    // --- SECCIÓN DE HISTORIAL DE MOVIMIENTOS ---
+    if (movimientos.length > 0) {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
+      doc.text("HISTORIAL DE MOVIMIENTOS RELEVANTES", pageWidth / 2, yPosition, { align: 'center' });
+      yPosition += 10;
+
+      movimientos.forEach((mov, index) => {
+        // Reiniciamos la fuente para cada movimiento
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(10);
+        
+        const fecha = new Date(mov.fecha_movimiento).toLocaleDateString();
+        const header = `${index + 1}. [${fecha}]`;
+        doc.text(header, margin, yPosition);
+        
+        doc.setFont("helvetica", "normal");
+        const descLines = doc.splitTextToSize(mov.descripcion || "Sin descripción", pageWidth - margin * 2 - 25); // Dejamos espacio
+        doc.text(descLines, margin + 25, yPosition); // Indentamos la descripción
+        yPosition += descLines.length * 5 + 5;
+
+        // Comprobamos si nos estamos saliendo de la página para añadir una nueva
+        if (yPosition > 280) {
+          doc.addPage();
+          yPosition = 20; // Reiniciamos Y en la nueva página
+        }
+      });
     }
-  };
+    
+    // --- Guardar el PDF ---
+    doc.save(`analisis_expediente_${expediente.nro_expediente || 'sin_numero'}.pdf`);
+
+  } catch (error) {
+    console.error("ERROR al generar PDF:", error);
+    alert("Hubo un error al generar el PDF. Revisa la consola.");
+  }
+};
+  // --- FIN DE LA CORRECCIÓN ---
 
   if (loading) return <CircularProgress />;
   if (error) return <Typography color="error">Error: {error}</Typography>;
-  if (!expediente) return <Typography color="error">Error: No se encontró el expediente.</Typography>;
-
-  const clienteNombre = `${expediente.cliente?.nombre || 'N/A'} ${expediente.cliente?.apellido || ''}`.trim();
-  const clienteEmail = expediente.cliente?.email || 'N/A';
-  const abogadoNombre = `${expediente.abogado?.nombre || 'N/A'} ${expediente.abogado?.apellido || ''}`.trim();
-  const abogadoMatricula = expediente.abogado?.matricula || 'N/A';
+  if (!expediente) return <Typography color="error">No se encontró el expediente.</Typography>;
 
   return (
     <Paper sx={{ p: 3 }}>
@@ -156,21 +193,27 @@ function ExpedienteDetailPage() {
       <Typography variant="h6" color="text.secondary">Carátula: {expediente.caratula}</Typography>
       <Divider sx={{ my: 2 }} />
       <Typography variant="h5" gutterBottom>Partes Involucradas</Typography>
-      <Typography><strong>Cliente:</strong> {clienteNombre}</Typography>
-      <Typography><strong>Email:</strong> {clienteEmail}</Typography>
-      <Typography><strong>Abogado a Cargo:</strong> {abogadoNombre}</Typography>
-      <Typography><strong>Matrícula:</strong> {abogadoMatricula}</Typography>
+      {/* Usamos los datos de los estados 'cliente' y 'abogado' */}
+      <Typography><strong>Cliente:</strong> {cliente ? `${cliente.nombre} ${cliente.apellido}` : 'Cargando...'}</Typography>
+      <Typography><strong>Email:</strong> {cliente ? cliente.email : 'Cargando...'}</Typography>
+      <Typography><strong>Abogado a Cargo:</strong> {abogado ? `${abogado.nombre} ${abogado.apellido}` : 'Cargando...'}</Typography>
+      <Typography><strong>Matrícula:</strong> {abogado ? abogado.matricula : 'Cargando...'}</Typography>
       <Divider sx={{ my: 2 }} />
       <Typography variant="h5" gutterBottom>Historial de Movimientos</Typography>
       <List>
-        {expediente.movimientos?.map((mov) => (
-          <ListItem key={mov.id} disableGutters>
-            <ListItemText
-              primary={mov.descripcion}
-              secondary={`Fecha: ${new Date(mov.fecha_movimiento).toLocaleDateString()}`}
-            />
-          </ListItem>
-        ))}
+        {/* Usamos el estado 'movimientos' */}
+        {movimientos.length > 0 ? (
+          movimientos.map((mov) => (
+            <ListItem key={mov.id} disableGutters>
+              <ListItemText
+                primary={mov.descripcion}
+                secondary={`Fecha: ${new Date(mov.fecha_movimiento).toLocaleDateString()}`}
+              />
+            </ListItem>
+          ))
+        ) : (
+          <Typography color="text.secondary">No hay movimientos para este expediente.</Typography>
+        )}
       </List>
     </Paper>
   );

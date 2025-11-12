@@ -1,3 +1,5 @@
+# Archivo: backend/src/schemas/resolucion.py
+
 from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import date, datetime
@@ -5,9 +7,12 @@ from datetime import date, datetime
 class ResolucionCreate(BaseModel):
     texto_resolucion: str = Field(..., example="La resolución del caso es favorable al demandante.")
     fecha_resolucion: date = Field(..., example="2024-11-20", description="Fecha de la resolución en formato AAAA-MM-DD")
-    fk_tipo_resolucion_id: int = Field(..., example=1, description="ID del tipo de resolución")
-    # fk_expediente_id puede venir en el body o en la ruta; si la ruta la contiene, no hace falta aquí
-    fk_expediente_id: Optional[int] = Field(None, example=1, description="ID del expediente (opcional si se pasa por la ruta)")
+    fk_tipo_resolucion_id: Optional[int] = Field(None, example=1, description="ID del tipo de resolución (opcional)")
+    
+    # --- INICIO DE LA CORRECCIÓN ---
+    # El ID del expediente es obligatorio para crear una resolución.
+    fk_expediente_id: int = Field(..., example=1, description="ID del expediente asociado")
+    # --- FIN DE LA CORRECCIÓN ---
 
 class ResolucionUpdate(BaseModel):
     texto_resolucion: Optional[str] = Field(None, example="Texto actualizado")

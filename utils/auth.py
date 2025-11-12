@@ -3,60 +3,56 @@ from typing import Optional
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
-from passlib.context import CryptContext
+import bcrypt
 from sqlalchemy.ext.asyncio import AsyncSession
-
-# Importamos la configuración y la función para obtener la sesión de BD
 from config.settings import settings
 from config.database import get_db
-# Importaremos el servicio de usuario para buscar usuarios en la BD
-from services import usuario as usuario_service 
-# Importaremos un schema para validar los datos del token
+import services.usuario as usuario_service
 from schemas.token import TokenData 
+from schemas.usuario import UsuarioOut
 
-# 1. Configuración de Seguridad para Contraseñas
-# Usamos bcrypt, el algoritmo estándar y más seguro para hashear contraseñas.
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-# 2. Esquema de Seguridad de FastAPI para obtener el token de las cabeceras
-# tokenUrl="token" le dice a la documentación de Swagger UI a qué endpoint debe apuntar para obtener el token.
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
-
-# --- FUNCIONES DE MANEJO DE CONTRASEÑAS ---
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verifica si una contraseña en texto plano coincide con su hash."""
-    return pwd_context.verify(plain_password, hashed_password)
+    """Verifica contraseña usando bcrypt directamente."""
+    try:
+        return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
+    except Exception as e:
+        print(f"Error verificando contraseña: {e}")
+        return False
 
 def get_password_hash(password: str) -> str:
-    """Genera el hash de una contraseña en texto plano."""
-    return pwd_context.hash(password)
+    """Genera hash de contraseña usando bcrypt directamente."""
+    try:
+        # Limitar a 72 bytes (límite de bcrypt)
+        password = password[:72]
+        # Generar salt y hash
+        salt = bcrypt.gensalt(rounds=12)
+        hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
+        return hashed.decode('utf-8')
+    except Exception as e:
+        print(f"Error hasheando contraseña: {e}")
+        raise
 
-# --- FUNCIONES DE MANEJO DE JWT ---
-
-def create_access_token(data: dict):
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     """Crea un nuevo token de acceso JWT."""
     to_encode = data.copy()
     
-    # Añadimos un tiempo de expiración al token
-    expire = datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    
     to_encode.update({"exp": expire})
     
-    # Codificamos el token con nuestra clave secreta y algoritmo
     encoded_jwt = jwt.encode(to_encode, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
     return encoded_jwt
-
-# --- DEPENDENCIA PARA PROTEGER RUTAS ---
 
 async def get_current_user(
     token: str = Depends(oauth2_scheme), 
     db: AsyncSession = Depends(get_db)
-):
-    """
-    Dependencia de FastAPI: decodifica el token, valida las credenciales
-    y devuelve el usuario actual de la base de datos.
-    Esta función será el "guardián" de nuestras rutas protegidas.
-    """
+) -> UsuarioOut:
+    """Dependencia que decodifica el token JWT y retorna el usuario autenticado."""
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="No se pudieron validar las credenciales",
@@ -64,21 +60,20 @@ async def get_current_user(
     )
     
     try:
-        # Decodificamos el token
         payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
-        email: str = payload.get("sub") # "sub" (subject) es el nombre estándar para el identificador del usuario
+        email: str = payload.get("sub")
+        
         if email is None:
             raise credentials_exception
-        token_data = TokenData(email=email)
-    except JWTError:
-        # Si el token es inválido (expirado, malformado, etc.)
-        raise credentials_exception
         
-    # Buscamos al usuario en la base de datos
-    user = await usuario_service.get_usuario_by_email(db, email=token_data.email)
+        token_data = TokenData(email=email)
+    
+    except JWTError:
+        raise credentials_exception
+    
+    user = await usuario_service.get_usuario_by_email(email=token_data.email, db=db)
     
     if user is None:
-        # Si el usuario no existe en la BD (p. ej. fue eliminado después de emitir el token)
         raise credentials_exception
-        
+    
     return user

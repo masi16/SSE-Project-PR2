@@ -4,7 +4,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Box, Button, TextField, Typography, Container, Paper, Grid } from '@mui/material';
 
 function RegisterPage() {
-  const [dni, setDni] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
@@ -19,7 +19,7 @@ function RegisterPage() {
     }
     setError('');
     try {
-      await register(dni, password);
+      await register({email, password});
       alert('¡Cuenta creada con éxito! Ahora puedes iniciar sesión.');
       navigate('/login');
     } catch (err) {
@@ -39,12 +39,12 @@ function RegisterPage() {
             margin="normal"
             required
             fullWidth
-            id="dni"
-            label="DNI"
-            name="dni"
+            id="email"
+            label="Correo Electrónico"
+            name="email"
             autoFocus
-            value={dni}
-            onChange={e => setDni(e.target.value)}
+            value={email}
+            onChange={e => setEmail(e.target.value)}
           />
           <TextField
             margin="normal"
