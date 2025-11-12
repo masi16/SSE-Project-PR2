@@ -76,7 +76,7 @@ function App() {
     <ListItemText primary="Expedientes" />
   </ListItemButton>
   
-  {/* 👇 2. AÑADE ESTE NUEVO BOTÓN A LA LISTA 👇 */}
+  {}
   <ListItemButton component={Link} to="/clientes">
     <ListItemIcon><PeopleIcon /></ListItemIcon>
     <ListItemText primary="Clientes" />

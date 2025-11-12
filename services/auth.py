@@ -6,7 +6,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
 from config.database import get_db
-
+from sqlalchemy import text 
 from schemas.auth import TokenData, UsuarioInDB
 
 # --- CONFIGURACIÓN JWT ---
@@ -29,7 +29,7 @@ def get_password_hash(password: str) -> str:
 
 
 async def get_user(username: str) -> Optional[UsuarioInDB]:
-    query = "SELECT username, hashed_password FROM usuarios WHERE username = :username"
+    query = text("SELECT username, hashed_password FROM usuarios WHERE username = :username")
     row = await get_db().fetch_one(query, values={"username": username})
     if row:
         return UsuarioInDB(**row)

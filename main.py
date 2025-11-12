@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import logging
 from sqlalchemy import text
-
+from routers import usuario  # importa aquí los routers que uses
 from config.database import engine
 from routers import expediente, auth  # importa aquí los routers que uses
 
@@ -43,6 +43,7 @@ async def on_shutdown():
 # Incluir routers
 app.include_router(expediente.router)
 app.include_router(auth.router)
+app.include_router(usuario.router)
 # app.include_router(...)  # incluye otros routers aquí
 
 @app.get("/")

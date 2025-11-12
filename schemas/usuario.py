@@ -3,7 +3,7 @@ from typing import Optional
 
 class UsuarioBase(BaseModel):
     email: EmailStr
-    rol: str = Field(..., pattern="^(abogado|admin)$") # Valida que el rol sea uno de los permitidos
+    rol: str = "Usuario"
     fk_abogado_id: Optional[int] = None
 
 class UsuarioCreate(UsuarioBase):

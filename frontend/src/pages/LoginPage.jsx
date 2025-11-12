@@ -1,13 +1,11 @@
-
-
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { Box, Button, TextField, Typography, Container, Paper, Grid } from '@mui/material';
 
 function LoginPage() {
-  
-  const [dni, setDni] = useState('');
+
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const { login } = useAuth();
@@ -18,7 +16,7 @@ function LoginPage() {
     setError('');
     try {
     
-      await login(dni, password);
+      await login(email, password);
       navigate('/');
     } catch (err) {
       setError('Correo o contraseña incorrectos');
@@ -39,12 +37,12 @@ function LoginPage() {
             margin="normal"
             required
             fullWidth
-            id="dni"
+            id="email"
             label="Correo Electrónico" 
-            name="dni"
+            name="email"
             autoFocus
-            value={dni}
-            onChange={e => setDni(e.target.value)}
+            value={email}
+            onChange={e => setEmail(e.target.value)}
           />
 
           <TextField

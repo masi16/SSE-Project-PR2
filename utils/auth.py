@@ -5,15 +5,11 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from sqlalchemy.ext.asyncio import AsyncSession
-
-# Importamos la configuración y la función para obtener la sesión de BD
 from config.settings import settings
 from config.database import get_db
-# Importaremos el servicio de usuario para buscar usuarios en la BD
-from services import usuario as usuario_service 
-# Importaremos un schema para validar los datos del token
+import services.usuario as usuario_service
 from schemas.token import TokenData 
-
+from schemas.usuario import UsuarioOut
 # 1. Configuración de Seguridad para Contraseñas
 # Usamos bcrypt, el algoritmo estándar y más seguro para hashear contraseñas.
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -51,7 +47,7 @@ def create_access_token(data: dict):
 async def get_current_user(
     token: str = Depends(oauth2_scheme), 
     db: AsyncSession = Depends(get_db)
-):
+) -> UsuarioOut:
     """
     Dependencia de FastAPI: decodifica el token, valida las credenciales
     y devuelve el usuario actual de la base de datos.
@@ -75,7 +71,7 @@ async def get_current_user(
         raise credentials_exception
         
     # Buscamos al usuario en la base de datos
-    user = await usuario_service.get_usuario_by_email(db, email=token_data.email)
+    user = await usuario_service.get_usuario_by_email(email=token_data.email, db=db)
     
     if user is None:
         # Si el usuario no existe en la BD (p. ej. fue eliminado después de emitir el token)
