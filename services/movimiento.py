@@ -20,20 +20,13 @@ async def create_movimiento(db: AsyncSession, movimiento_data: MovimientoCreate,
             "descripcion": movimiento_data.descripcion,
             "fk_expediente_id": movimiento_data.fk_expediente_id
         }
-        
-        # --- INICIO DE LA CORRECCIÓN ---
-        # 1. Ejecutamos el INSERT y guardamos el resultado
         result = await db.execute(query, values)
         await db.commit()
 
-        # 2. Obtenemos el ID del objeto cursor del resultado
         created_id = result.lastrowid
         if not created_id:
              raise HTTPException(status_code=500, detail="No se pudo obtener el ID del movimiento creado.")
-
-        # 3. Usamos ese ID para obtener el objeto completo y devolverlo
         return await get_movimiento(db, created_id, current_user)
-        # --- FIN DE LA CORRECCIÓN ---
 
     except HTTPException:
         raise
@@ -54,7 +47,6 @@ async def get_movimientos(db: AsyncSession, skip: int = 0, limit: int = 50, curr
         """)
         result = await db.execute(query, {"limit": limit, "skip": skip})
         rows = result.mappings().all()
-        # Convertimos cada fila a dict antes de la validación para robustez
         movimientos = [MovimientoOut.model_validate(dict(row)) for row in rows]
         return movimientos
     except Exception as e:
@@ -74,7 +66,6 @@ async def get_movimiento(db: AsyncSession, movimiento_id: int, current_user) -> 
         row = result.mappings().one_or_none()
         
         if row:
-            # Convertimos a dict antes de la validación
             return MovimientoOut.model_validate(dict(row))
         return None
     except Exception as e:

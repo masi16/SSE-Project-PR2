@@ -54,7 +54,6 @@ function HomePage() {
         total_cases: totalExpedientes,
         active_cases: expedientesAbiertos + expedientesEnProgreso,
         closed_cases: expedientesCerrados,
-        // Eliminamos la referencia a 'today_consultations'
       });
 
       const datosGrafico = estados.map(estado => {
@@ -140,12 +139,10 @@ function HomePage() {
         <Grid item xs={12} md={3}>
           <StatCard title="Expedientes Cerrados" value={summary?.closed_cases || 0} color="success" />
         </Grid>
-        {/* --- INICIO DE LA CORRECCIÓN --- */}
-        {/* Hemos eliminado el Grid item que contenía la StatCard de "Consultas Hoy" */}
-        {/* --- FIN DE LA CORRECCIÓN --- */}
+        {}
+        {}
+        {}
       </Grid>
-      
-      {/* El resto del código de los gráficos no cambia */}
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} md={6}>
           <Paper sx={{ p: 2 }}>

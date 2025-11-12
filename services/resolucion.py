@@ -1,5 +1,3 @@
-# Archivo: backend/src/services/resolucion.py
-
 from typing import List, Optional
 from fastapi import HTTPException, status
 from sqlalchemy import text
@@ -21,20 +19,15 @@ async def create_resolucion(db: AsyncSession, resolucion_data: ResolucionCreate,
             "fecha_resolucion": resolucion_data.fecha_resolucion,
             "fk_expediente_id": fk_expediente
         }
-        
-        # --- INICIO DE LA CORRECCIÓN ---
-        # 1. Ejecutamos el INSERT y guardamos el resultado
         result = await db.execute(query, values)
         await db.commit()
 
-        # 2. Obtenemos el ID del objeto cursor del resultado
         created_id = result.lastrowid
         if not created_id:
              raise HTTPException(status_code=500, detail="No se pudo obtener el ID de la resolución creada.")
 
-        # 3. Usamos ese ID para obtener el objeto completo y devolverlo
         return await get_resolucion(db, created_id, current_user)
-        # --- FIN DE LA CORRECCIÓN ---
+        
 
     except HTTPException:
         raise
@@ -54,7 +47,7 @@ async def get_resoluciones(db: AsyncSession, skip: int = 0, limit: int = 100, cu
             LIMIT :limit OFFSET :skip
         """)
         result = await db.execute(query, {"limit": limit, "skip": skip})
-        # Usamos .all() para obtener todos los resultados de una vez
+       
         rows = result.mappings().all()
         resoluciones = [ResolucionOut.model_validate(dict(row)) for row in rows]
         return resoluciones

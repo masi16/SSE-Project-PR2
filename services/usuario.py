@@ -50,8 +50,6 @@ async def create_usuario(usuario_data: UsuarioCreate, db: AsyncSession) -> Optio
             )
         
         hashed_password = get_password_hash(usuario_data.password)
-
-        # Para MariaDB: INSERT sin RETURNING
         query = text("""
             INSERT INTO usuarios (email, rol, fk_abogado_id, password_hash)
             VALUES (:email, :rol, :fk_abogado_id, :password_hash)
@@ -67,7 +65,7 @@ async def create_usuario(usuario_data: UsuarioCreate, db: AsyncSession) -> Optio
         result = await db.execute(query, values)
         await db.commit()
         
-        # Obtener el usuario creado por email
+
         created_user = await get_usuario_by_email(email=usuario_data.email, db=db)
         return created_user
         

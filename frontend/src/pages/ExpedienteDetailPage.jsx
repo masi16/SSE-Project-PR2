@@ -29,14 +29,12 @@ function ExpedienteDetailPage() {
       } catch (err) {
         console.error("Error al obtener el expediente:", err);
         setError(err.message || 'No se pudo cargar el expediente');
-        setLoading(false); // Detener la carga si hay error
+        setLoading(false); 
       }
     };
     fetchExpediente();
   }, [expedienteId, api]);
 
-  // --- INICIO DE LA CORRECCIÓN ---
-  // Efecto para buscar los detalles (cliente, abogado, movimientos) UNA VEZ que tenemos el expediente
   useEffect(() => {
     if (!expediente) return;
 
@@ -46,7 +44,7 @@ function ExpedienteDetailPage() {
         const promises = [
           api.get(`/clientes/${expediente.fk_cliente_id}`),
           api.get(`/abogados/${expediente.fk_abogado_id}`),
-          api.get('/movimientos/') // Obtenemos todos los movimientos
+          api.get('/movimientos/') 
         ];
 
         // Esperamos a que todas las llamadas terminen
@@ -65,14 +63,12 @@ function ExpedienteDetailPage() {
         console.error("Error al obtener los detalles adicionales:", err);
         setError("No se pudieron cargar los detalles del cliente o abogado.");
       } finally {
-        setLoading(false); // Terminamos la carga cuando todos los datos están listos
+        setLoading(false); 
       }
     };
 
     fetchDetails();
-  }, [expediente, api]); // Este efecto se dispara cuando 'expediente' cambia
-
- // En frontend/src/pages/ExpedienteDetailPage.jsx
+  }, [expediente, api]); 
 
 const generatePdf = () => {
   if (!expediente || !cliente || !abogado) {
@@ -84,23 +80,22 @@ const generatePdf = () => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     const margin = 15;
-    let yPosition = 20; // Posición vertical inicial
+    let yPosition = 20; 
 
-    // --- TÍTULO ---
     doc.setFont("helvetica", "bold");
     doc.setFontSize(14);
     doc.text("ANÁLISIS DE EXPEDIENTE", pageWidth / 2, yPosition, { align: 'center' });
-    yPosition += 15; // Aumentar espacio
+    yPosition += 15; 
 
     // --- FUNCIÓN AUXILIAR PARA ESCRIBIR LÍNEAS DE DATOS ---
     const writeDataLine = (label, value) => {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(10);
       doc.text(`${label}:`, margin, yPosition);
-      
+      doc.setFont("helvetica", "bold");
       doc.setFont("helvetica", "normal");
-      doc.text(value || 'N/A', margin + 45, yPosition); // Alinea el valor
-      yPosition += 7; // Espacio entre líneas
+      doc.text(value || 'N/A', margin + 45, yPosition); 
+      yPosition += 7; 
     };
 
     // --- BLOQUE DE DATOS PRINCIPALES ---
@@ -124,10 +119,9 @@ const generatePdf = () => {
 
     doc.setFont("helvetica", "normal");
     const clientText = `El cliente principal en este caso es ${cliente.nombre} ${cliente.apellido}, con correo electrónico de contacto ${cliente.email}.`;
-    // Usamos splitTextToSize para que el texto largo se ajuste automáticamente al ancho de la página
     const clientLines = doc.splitTextToSize(clientText, pageWidth - margin * 2);
     doc.text(clientLines, margin, yPosition);
-    yPosition += clientLines.length * 5 + 5; // Ajustar Y según el número de líneas
+    yPosition += clientLines.length * 5 + 5; 
 
     const lawyerText = `El caso está siendo gestionado por el abogado ${abogado.nombre} ${abogado.apellido}, cuya matrícula profesional es ${abogado.matricula}.`;
     const lawyerLines = doc.splitTextToSize(lawyerText, pageWidth - margin * 2);
@@ -143,7 +137,6 @@ const generatePdf = () => {
       yPosition += 10;
 
       movimientos.forEach((mov, index) => {
-        // Reiniciamos la fuente para cada movimiento
         doc.setFont("helvetica", "bold");
         doc.setFontSize(10);
         
@@ -152,14 +145,13 @@ const generatePdf = () => {
         doc.text(header, margin, yPosition);
         
         doc.setFont("helvetica", "normal");
-        const descLines = doc.splitTextToSize(mov.descripcion || "Sin descripción", pageWidth - margin * 2 - 25); // Dejamos espacio
-        doc.text(descLines, margin + 25, yPosition); // Indentamos la descripción
+        const descLines = doc.splitTextToSize(mov.descripcion || "Sin descripción", pageWidth - margin * 2 - 25); 
+        doc.text(descLines, margin + 25, yPosition); 
         yPosition += descLines.length * 5 + 5;
 
-        // Comprobamos si nos estamos saliendo de la página para añadir una nueva
         if (yPosition > 280) {
           doc.addPage();
-          yPosition = 20; // Reiniciamos Y en la nueva página
+          yPosition = 20; 
         }
       });
     }

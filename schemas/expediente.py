@@ -29,10 +29,8 @@ class ExpedienteSimple(BaseModel):
     fecha_ingreso: date
     fk_cliente_id: int
     fk_abogado_id: int
-    # --- INICIO DE LA CORRECCIÓN ---
-    # Permitimos que el estado sea opcional (puede ser None)
     fk_estado_id: Optional[int] = None
-    # --- FIN DE LA CORRECCIÓN ---
+    
     
     class Config:
         from_attributes = True

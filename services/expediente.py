@@ -1,5 +1,3 @@
-# Archivo: backend/src/services/expediente.py
-
 from typing import List, Optional
 from fastapi import HTTPException, status
 from sqlalchemy import text
@@ -35,7 +33,6 @@ async def create_expediente(db: AsyncSession, expediente: ExpedienteCreate, curr
         row = result.mappings().one_or_none()
         
         if row:
-            # CORRECCIÓN: Convertir el resultado a un diccionario antes de validar
             return ExpedienteSimple.model_validate(dict(row))
         return None
 
@@ -76,7 +73,6 @@ async def get_expedientes(db: AsyncSession, skip: int = 0, limit: int = 50, curr
         result = await db.execute(query, params)
         rows = result.mappings().all()
 
-        # CORRECCIÓN: Convertir cada resultado a un diccionario antes de validar
         expedientes = [ExpedienteSimple.model_validate(dict(row)) for row in rows]
         return expedientes
 
@@ -97,7 +93,6 @@ async def get_expediente(db: AsyncSession, expediente_id: int, current_user) -> 
         row = result.mappings().one_or_none()
         
         if row:
-            # CORRECCIÓN: Convertir el resultado a un diccionario antes de validar
             return ExpedienteSimple.model_validate(dict(row))
         return None
     except Exception as e:
